@@ -4,58 +4,70 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { UIBlock } from '@/utils/cosmosClient';
+import { ComponentMetadata } from '@/types/component';
 import { ComponentRenderer, PreviewWrapper } from '@/utils/componentRenderer';
 
 export default function PreviewPage() {
   const searchParams = useSearchParams();
-  const blockId = searchParams.get('id');
+  const componentId = searchParams.get('id');
   
-  const [block, setBlock] = useState<UIBlock | null>(null);
+  const [component, setComponent] = useState<ComponentMetadata | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customProps, setCustomProps] = useState<Record<string, any>>({});
   const [customPropsJson, setCustomPropsJson] = useState('{}');
 
   useEffect(() => {
-    const fetchBlock = async () => {
-      if (!blockId) return;
+    const fetchComponent = async () => {
+      if (!componentId) return;
       
       setLoading(true);
       setError(null);
       
       try {
-        const response = await fetch(`/api/blocks/${blockId}`);
+        const response = await fetch(`/api/blocks/${componentId}`);
         
         if (!response.ok) {
-          throw new Error('Failed to fetch block');
+          throw new Error('Failed to fetch component');
         }
         
-        const data = await response.json();
-        setBlock(data);
-        setCustomPropsJson(JSON.stringify(data.defaultProps, null, 2));
+        const data: ComponentMetadata = await response.json();
+        setComponent(data);
+        
+        // If defaultProps exist, use them to pre-populate
+        if (data.defaultProps) {
+          setCustomPropsJson(JSON.stringify(data.defaultProps, null, 2));
+          setCustomProps(data.defaultProps);
+        } else {
+          // Fallback: if no defaultProps, keep it empty or set something minimal
+          setCustomPropsJson('{}');
+          setCustomProps({});
+        }
       } catch (error) {
-        console.error('Error fetching block:', error);
-        setError('Failed to load block. Please try again.');
+        console.error('Error fetching component:', error);
+        setError('Failed to load component. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBlock();
-  }, [blockId]);
+    fetchComponent();
+  }, [componentId]);
 
-  const handleCustomPropsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setCustomPropsJson(e.target.value);
+  const handleApplyChanges = () => {
     try {
-      const parsedProps = JSON.parse(e.target.value);
-      setCustomProps(parsedProps);
+      const parsed = JSON.parse(customPropsJson);
+      setCustomProps(parsed);
     } catch (error) {
-      // Don't update customProps if JSON is invalid
+      alert('Invalid JSON. Please fix the errors before applying.');
     }
   };
 
-  if (!blockId) {
+  const handleCustomPropsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCustomPropsJson(e.target.value);
+  };
+
+  if (!componentId) {
     return (
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-6">Component Preview</h1>
@@ -92,32 +104,42 @@ export default function PreviewPage() {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
           {error}
         </div>
-      ) : block ? (
+      ) : component ? (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-3 space-y-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Component: {block.name}</h2>
+              <h2 className="text-xl font-semibold mb-4">Component: {component.name}</h2>
               
               <div className="mb-6">
                 <div className="flex flex-wrap gap-2 mb-3">
                   <span className={`text-xs px-2 py-1 rounded ${
-                    block.type === 'base' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                    component.componentType === 'base' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
                   }`}>
-                    {block.type}
+                    {component.componentType}
                   </span>
-                  <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-800">
-                    {block.category}
-                  </span>
-                  {block.metadata?.tags?.map((tag, index) => (
-                    <span key={index} className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">
-                      {tag}
+                  
+                  {component.businessType?.map((type, index) => (
+                    <span key={`business-${index}`} className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
+                      {type}
+                    </span>
+                  ))}
+                  
+                  {component.style?.map((style, index) => (
+                    <span key={`style-${index}`} className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                      {style}
+                    </span>
+                  ))}
+                  
+                  {component.features?.map((feature, index) => (
+                    <span key={`feature-${index}`} className="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-800">
+                      {feature}
                     </span>
                   ))}
                 </div>
               </div>
               
               <PreviewWrapper>
-                <ComponentRenderer block={block} customProps={customProps} />
+                <ComponentRenderer component={component} customProps={customProps} />
               </PreviewWrapper>
             </div>
           </div>
@@ -126,7 +148,7 @@ export default function PreviewPage() {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-lg font-semibold mb-3">Component Properties</h2>
               <p className="text-sm text-gray-600 mb-3">
-                Edit the properties below to see how the component changes.
+                Edit the properties (in JSON format) below to see how the component changes.
               </p>
               
               <textarea
@@ -135,14 +157,57 @@ export default function PreviewPage() {
                 className="w-full h-80 font-mono text-sm p-3 border rounded-md"
                 spellCheck="false"
               />
-              
-              <div className="text-right mt-2">
+              <div className="flex justify-end mt-2">
                 <button
-                  onClick={() => setCustomPropsJson(JSON.stringify(block.defaultProps, null, 2))}
-                  className="text-sm text-blue-600 hover:underline"
+                  onClick={handleApplyChanges}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
-                  Reset to defaults
+                  Apply Changes
                 </button>
+              </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-lg font-semibold mb-3">Component Information</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700">Description</h3>
+                  <p className="text-sm text-gray-600 mt-1">{component.description}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700">Import Statement</h3>
+                  <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-x-auto">
+                    {component.importStatement}
+                  </pre>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700">Required Props</h3>
+                  {component.props?.required?.length ? (
+                    <ul className="list-disc list-inside text-sm text-gray-600 mt-1">
+                      {component.props.required.map((prop, idx) => (
+                        <li key={idx}>{prop}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-600 mt-1">No required props</p>
+                  )}
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700">Optional Props</h3>
+                  {component.props?.optional?.length ? (
+                    <ul className="list-disc list-inside text-sm text-gray-600 mt-1">
+                      {component.props.optional.map((prop, idx) => (
+                        <li key={idx}>{prop}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-600 mt-1">No optional props</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

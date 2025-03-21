@@ -1,159 +1,142 @@
 'use client';
 
 import React, { useState } from 'react';
-import { UIBlock } from '@/utils/cosmosClient';
-import { Button } from '../blocks/base/Button';
 import Link from 'next/link';
+import { ComponentMetadata } from '@/types/component';
 
 interface BlockListProps {
-  blocks: UIBlock[];
-  onEdit: (block: UIBlock) => void;
-  onDelete: (blockId: string) => Promise<void>;
+  components: ComponentMetadata[];
+  onEdit: (component: ComponentMetadata) => void;
+  onDelete: (componentId: string) => Promise<void>;
   onRefresh: () => void;
 }
 
 export const BlockList: React.FC<BlockListProps> = ({
-  blocks,
+  components,
   onEdit,
   onDelete,
   onRefresh,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'base' | 'composite'>('all');
-  const [filterCategory, setFilterCategory] = useState('');
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [filter, setFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'base' | 'composite'>('all');
 
-  // Get unique categories from blocks
-  const categories = Array.from(
-    new Set(blocks.map((block) => block.category))
-  ).sort();
-
-  const filteredBlocks = blocks.filter((block) => {
-    const matchesSearchTerm = block.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              block.component.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || block.type === filterType;
-    const matchesCategory = filterCategory === '' || block.category === filterCategory;
+  // Handle component deletion with loading state
+  const handleDelete = async (component: ComponentMetadata) => {
+    if (!window.confirm(`Are you sure you want to delete "${component.name}"?`)) {
+      return;
+    }
     
-    return matchesSearchTerm && matchesType && matchesCategory;
-  });
-
-  const handleDelete = async (blockId: string) => {
-    setDeleting(blockId);
+    setDeleteLoading(component.id);
+    
     try {
-      await onDelete(blockId);
+      await onDelete(component.id);
       onRefresh();
     } catch (error) {
-      console.error('Error deleting block:', error);
+      console.error('Failed to delete component:', error);
+      alert('Failed to delete component. Please try again.');
     } finally {
-      setDeleting(null);
+      setDeleteLoading(null);
     }
   };
 
+  // Filter components based on search and type filter
+  const filteredComponents = components.filter((component) => {
+    const matchesSearch = component.name.toLowerCase().includes(filter.toLowerCase()) ||
+      component.description?.toLowerCase().includes(filter.toLowerCase()) ||
+      component.businessType?.some(type => type.toLowerCase().includes(filter.toLowerCase())) ||
+      component.style?.some(style => style.toLowerCase().includes(filter.toLowerCase())) ||
+      component.features?.some(feature => feature.toLowerCase().includes(filter.toLowerCase()));
+      
+    const matchesType = typeFilter === 'all' || component.componentType === typeFilter;
+    
+    return matchesSearch && matchesType;
+  });
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex-1">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-grow">
           <input
             type="text"
-            placeholder="Search blocks..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search components..."
             className="w-full p-2 border rounded-md"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
           />
         </div>
         
-        <div className="flex gap-2">
+        <div>
           <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value as any)}
-            className="p-2 border rounded-md"
+            className="w-full sm:w-auto p-2 border rounded-md bg-white"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as any)}
           >
             <option value="all">All Types</option>
-            <option value="base">Base</option>
-            <option value="composite">Composite</option>
+            <option value="base">Base Components</option>
+            <option value="composite">Composite Components</option>
           </select>
-          
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="p-2 border rounded-md"
-          >
-            <option value="">All Categories</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            label="Refresh" 
-            onClick={onRefresh} 
-          />
         </div>
       </div>
       
-      {filteredBlocks.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          No blocks found. Try adjusting your filters or creating new blocks.
+      {filteredComponents.length === 0 ? (
+        <div className="bg-gray-50 p-6 text-center rounded-md">
+          <p className="text-gray-500">No components found matching your criteria.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredBlocks.map((block) => (
-            <div 
-              key={block.id} 
-              className="border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow"
-            >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredComponents.map((component) => (
+            <div key={component.id} className="border rounded-md bg-white shadow-sm overflow-hidden">
               <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-lg">{block.name}</h3>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    block.type === 'base' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                <div className="flex justify-between items-start">
+                  <h2 className="text-lg font-semibold">{component.name}</h2>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    component.componentType === 'base' 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'bg-purple-100 text-purple-800'
                   }`}>
-                    {block.type}
+                    {component.componentType}
                   </span>
                 </div>
                 
-                <p className="text-sm text-gray-600 mb-2">
-                  Category: {block.category}
-                </p>
+                <p className="mt-2 text-sm text-gray-600 line-clamp-2">{component.description}</p>
                 
-                <p className="text-sm text-gray-600 mb-2">
-                  Component: {block.component}
-                </p>
-                
-                {block.metadata?.tags && block.metadata.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {block.metadata.tags.map((tag, index) => (
-                      <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <div className="mt-3 flex flex-wrap gap-1">
+                  {component.businessType?.slice(0, 3).map((type, i) => (
+                    <span key={`${component.id}-business-${i}`} className="text-xs px-1.5 py-0.5 bg-green-50 text-green-700 rounded">
+                      {type}
+                    </span>
+                  ))}
+                  
+                  {component.style?.slice(0, 2).map((style, i) => (
+                    <span key={`${component.id}-style-${i}`} className="text-xs px-1.5 py-0.5 bg-yellow-50 text-yellow-700 rounded">
+                      {style}
+                    </span>
+                  ))}
+                </div>
               </div>
               
               <div className="flex border-t">
                 <button
-                  onClick={() => onEdit(block)}
-                  className="flex-1 py-2 text-blue-600 hover:bg-blue-50 transition-colors"
+                  className="flex-1 p-2 text-center text-blue-600 hover:bg-blue-50 transition-colors"
+                  onClick={() => onEdit(component)}
                 >
                   Edit
                 </button>
+                
                 <Link
-                  href={`/preview?id=${block.id}`}
-                  className="flex-1 py-2 text-green-600 hover:bg-green-50 transition-colors text-center"
+                  href={`/preview?id=${component.id}`}
+                  className="flex-1 p-2 text-center text-green-600 hover:bg-green-50 transition-colors"
                 >
                   Preview
                 </Link>
+                
                 <button
-                  onClick={() => handleDelete(block.id)}
-                  disabled={deleting === block.id}
-                  className="flex-1 py-2 text-red-600 hover:bg-red-50 transition-colors disabled:text-gray-400 disabled:hover:bg-transparent"
+                  className="flex-1 p-2 text-center text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                  onClick={() => handleDelete(component)}
+                  disabled={deleteLoading === component.id}
                 >
-                  {deleting === block.id ? 'Deleting...' : 'Delete'}
+                  {deleteLoading === component.id ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>

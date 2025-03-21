@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@azure/cosmos": "^4.2.0",
+    "@babel/standalone": "^7.26.10",
     "@monaco-editor/react": "^4.7.0",
     "@types/uuid": "^10.0.0",
     "next": "15.2.1",

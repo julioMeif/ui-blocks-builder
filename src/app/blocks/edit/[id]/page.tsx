@@ -4,19 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { BlockEditor } from '@/components/builder/BlockEditor';
-import { UIBlock } from '@/utils/cosmosClient';
+import { ComponentMetadata } from '@/types/component';
 
 export default function EditBlockPage() {
   const router = useRouter();
   const params = useParams();
   const blockId = params?.id as string;
 
-  const [block, setBlock] = useState<UIBlock | null>(null);
+  const [component, setComponent] = useState<ComponentMetadata | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchBlock = async () => {
+    const fetchComponent = async () => {
       setLoading(true);
       setError(null);
       
@@ -24,41 +24,41 @@ export default function EditBlockPage() {
         const response = await fetch(`/api/blocks/${blockId}`);
         
         if (!response.ok) {
-          throw new Error('Failed to fetch block');
+          throw new Error('Failed to fetch component');
         }
         
         const data = await response.json();
-        setBlock(data);
+        setComponent(data);
       } catch (error) {
-        console.error('Error fetching block:', error);
-        setError('Failed to load block. Please try again.');
+        console.error('Error fetching component:', error);
+        setError('Failed to load component. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
     if (blockId) {
-      fetchBlock();
+      fetchComponent();
     }
   }, [blockId]);
 
-  const handleSave = async (blockData: any) => {
+  const handleSave = async (componentData: Partial<ComponentMetadata>) => {
     try {
       const response = await fetch(`/api/blocks/${blockId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(blockData),
+        body: JSON.stringify(componentData),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to update block');
+        throw new Error('Failed to update component');
       }
       
       router.push('/blocks');
     } catch (error) {
-      console.error('Error updating block:', error);
+      console.error('Error updating component:', error);
       throw error;
     }
   };
@@ -72,22 +72,22 @@ export default function EditBlockPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="mt-3 text-gray-600">Loading block...</p>
+          <p className="mt-3 text-gray-600">Loading component...</p>
         </div>
       </main>
     );
   }
 
-  if (error || !block) {
+  if (error || !component) {
     return (
       <main className="container mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-          {error || 'Block not found'}
+          {error || 'Component not found'}
           <button
             onClick={() => router.push('/blocks')}
             className="ml-3 underline"
           >
-            Go Back to Blocks
+            Go Back to Components
           </button>
         </div>
       </main>
@@ -96,10 +96,10 @@ export default function EditBlockPage() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl md:text-3xl font-bold mb-8">Edit UI Block: {block.name}</h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-8">Edit UI Component: {component.name}</h1>
       
       <BlockEditor
-        initialBlock={block}
+        initialBlock={component}
         onSave={handleSave}
         onCancel={handleCancel}
       />

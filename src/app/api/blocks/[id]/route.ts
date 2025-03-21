@@ -1,45 +1,49 @@
+// app/api/blocks/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getUIBlockById, updateUIBlock, deleteUIBlock } from '@/utils/cosmosClient';
+import { getComponentById, updateComponent, deleteComponent } from '@/utils/cosmosClient';
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  // Await params to ensure we have a resolved object
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
+
   try {
-    const block = await getUIBlockById(params.id);
-    if (!block) {
-      return NextResponse.json({ error: 'Block not found' }, { status: 404 });
+    const component = await getComponentById(id);
+    if (!component) {
+      return NextResponse.json({ error: 'Component not found' }, { status: 404 });
     }
-    return NextResponse.json(block);
-  } catch (error) {
-    console.error('Error fetching block:', error);
-    return NextResponse.json({ error: 'Failed to fetch block' }, { status: 500 });
+    return NextResponse.json(component);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const { id } = await params;
   try {
     const data = await request.json();
-    const updatedBlock = await updateUIBlock(params.id, data);
-    return NextResponse.json(updatedBlock);
-  } catch (error) {
-    console.error('Error updating block:', error);
-    return NextResponse.json({ error: 'Failed to update block' }, { status: 500 });
+    const updated = await updateComponent(id, data);
+    return NextResponse.json(updated);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const { id } = await params;
   try {
-    await deleteUIBlock(params.id);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting block:', error);
-    return NextResponse.json({ error: 'Failed to delete block' }, { status: 500 });
+    await deleteComponent(id);
+    return NextResponse.json({ message: 'Component deleted successfully' });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

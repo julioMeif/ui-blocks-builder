@@ -1,63 +1,61 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button } from './Button';
+import React from 'react';
+import { ButtonModern } from './ButtonModern';
+import { ButtonCorporate } from './ButtonCorporate';
+import { ButtonCreative } from './ButtonCreative';
 
-const meta: Meta<typeof Button> = {
-  title: 'Blocks/Base/Button',
-  component: Button,
+const meta: Meta = {
+  title: 'Blocks/Base/Buttons',
   tags: ['autodocs'],
+  component: ButtonModern,
   argTypes: {
-    variant: {
-      control: 'select',
-      options: ['primary', 'secondary', 'outline'],
-    },
-    size: {
-      control: 'select',
-      options: ['sm', 'md', 'lg'],
-    },
-    label: { control: 'text' },
-    onClick: { action: 'clicked' },
+    variant: { control: 'select', options: ['primary', 'secondary', 'outline', 'accent'] },
+    size: { control: 'select', options: ['sm', 'md', 'lg'] },
+    animated: { control: 'boolean' },
   },
-};
+} satisfies Meta<typeof ButtonModern>;
 
 export default meta;
-type Story = StoryObj<typeof Button>;
 
-export const Primary: Story = {
+export const Modern: StoryObj<typeof ButtonModern> = {
   args: {
     variant: 'primary',
     size: 'md',
-    label: 'Button',
+    animated: false,
+    children: 'Modern Button',
+  },
+  render: (args) => <ButtonModern {...args} />,
+  parameters: {
+    businessType: ['Services', 'Portfolio', 'Personal Website', 'Consulting', 'Professional Services', 'Educational'],
+    style: ['Modern & Professional', 'Minimal & Elegant', 'Clean & Simple', 'Sophisticated & Refined'],
   },
 };
 
-export const Secondary: Story = {
-  args: {
-    variant: 'secondary',
-    size: 'md',
-    label: 'Button',
-  },
-};
-
-export const Outline: Story = {
-  args: {
-    variant: 'outline',
-    size: 'md',
-    label: 'Button',
-  },
-};
-
-export const Small: Story = {
+export const Corporate: StoryObj<typeof ButtonCorporate> = {
   args: {
     variant: 'primary',
-    size: 'sm',
-    label: 'Small Button',
+    size: 'md',
+    children: 'Corporate Button',
+  },
+  render: (args) => <ButtonCorporate {...args} />,
+  parameters: {
+    businessType: ['Consulting', 'Sales Portal', 'Professional Services', 'Educational', 'Services'],
+    style: ['Corporate & Serious', 'Sophisticated & Refined', 'Modern & Professional'],
+    features: ['Booking System', 'Contact Form'],
   },
 };
 
-export const Large: Story = {
+export const Creative: StoryObj<typeof ButtonCreative> = {
   args: {
-    variant: 'primary',
-    size: 'lg',
-    label: 'Large Button',
+    variant: 'accent',
+    size: 'md',
+    animated: true,
+    children: 'Creative Button',
+  },
+  render: (args) => <ButtonCreative {...args} />,
+  parameters: {
+    businessType: ['Blog', 'Portfolio', 'Personal Website', 'Educational', 'Other'],
+    style: ['Bold & Creative', 'Playful & Fun', 'Artistic & Expressive'],
+    features: ['Newsletter Integration', 'Blog functionality', 'Other'],
   },
 };

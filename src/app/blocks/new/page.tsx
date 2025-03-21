@@ -3,27 +3,28 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { BlockEditor } from '@/components/builder/BlockEditor';
+import { ComponentMetadata } from '@/types/component';
 
-export default function NewBlockPage() {
+export default function NewComponentPage() {
   const router = useRouter();
 
-  const handleSave = async (blockData: any) => {
+  const handleSave = async (componentData: Partial<ComponentMetadata>) => {
     try {
       const response = await fetch('/api/blocks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(blockData),
+        body: JSON.stringify(componentData),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to create block');
+        throw new Error('Failed to create component');
       }
       
       router.push('/blocks');
     } catch (error) {
-      console.error('Error creating block:', error);
+      console.error('Error creating component:', error);
       throw error;
     }
   };
@@ -34,7 +35,7 @@ export default function NewBlockPage() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl md:text-3xl font-bold mb-8">Create New UI Block</h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-8">Create New UI Component</h1>
       
       <BlockEditor
         onSave={handleSave}
