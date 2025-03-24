@@ -65,7 +65,7 @@ export const ComponentRenderer = ({
           fn(module, module.exports, dummyRequire);
     
           // Retrieve the component from the exports.
-          const evaluated = module.exports;
+          const evaluated = module.exports as any;;
           const Comp =
             evaluated.default || evaluated[componentName] || evaluated;
     
@@ -81,7 +81,7 @@ export const ComponentRenderer = ({
     }, [StaticComponent, component.sourceCode, componentName]);
     
   
-  
+  console.log("Rendering with props:", customProps); 
 
   // Decide which component to render
   const RenderComponent = StaticComponent || DynamicComponent;

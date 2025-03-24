@@ -3,6 +3,15 @@
 /* 1. Import Tailwind core */
 @import "tailwindcss";
 
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+    font-weight: inherit;
+    margin: 0;
+    padding: 0;
+  }
+}
+
 /* 2. Configure your theme via CSS custom properties */
 @theme {
   /* Colors */
@@ -29,8 +38,109 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
-  --radius-full: 9999px;
+  --radius-full: 9999px
 }
+
+@layer utilities {
+  /* Text colors */
+  .text-primary        { color: var(--color-primary); }
+  .text-secondary      { color: var(--color-secondary); }
+  .text-accent         { color: var(--color-accent); }
+  .text-onPrimary      { color: var(--color-onPrimary); }
+  .text-onSecondary    { color: var(--color-onSecondary); }
+  .text-onAccent       { color: var(--color-onAccent); }
+  .text-onBackground   { color: var(--color-onBackground); }
+  .text-onDark         { color: var(--color-onDark); }
+  .text-onLight        { color: var(--color-onLight); }
+
+  /* Background colors */
+  .bg-primary          { background-color: var(--color-primary); }
+  .bg-secondary        { background-color: var(--color-secondary); }
+  .bg-accent           { background-color: var(--color-accent); }
+  .bg-background       { background-color: var(--color-background); }
+
+  /* Hover states */
+  .hover\:text-onPrimary:hover     { color: var(--color-onPrimary); }
+  .hover\:text-onSecondary:hover   { color: var(--color-onSecondary); }
+  .hover\:text-onAccent:hover      { color: var(--color-onAccent); }
+  .hover\:bg-primary:hover         { background-color: var(--color-primary); }
+  .hover\:bg-secondary:hover       { background-color: var(--color-secondary); }
+  .hover\:bg-accent:hover          { background-color: var(--color-accent); }
+
+  /* Border radius */
+  .rounded-sm       { border-radius: var(--radius-sm); }
+  .rounded-md       { border-radius: var(--radius-md); }
+  .rounded-lg       { border-radius: var(--radius-lg); }
+  .rounded-full     { border-radius: var(--radius-full); }
+
+  /* Font weights (if you're dynamically setting them via class names) */
+  .font-normal      { font-weight: 400; }
+  .font-medium      { font-weight: 500; }
+  .font-semibold    { font-weight: 600; }
+  .font-bold        { font-weight: 700; }
+
+  /* Spacing utilities (for padding/margin fallback) */
+  .p-xs             { padding: var(--spacing-xs); }
+  .p-sm             { padding: var(--spacing-sm); }
+  .p-md             { padding: var(--spacing-md); }
+  .p-lg             { padding: var(--spacing-lg); }
+  .p-xl             { padding: var(--spacing-xl); }
+
+  .px-sm            { padding-left: var(--spacing-sm); padding-right: var(--spacing-sm); }
+  .py-sm            { padding-top: var(--spacing-sm); padding-bottom: var(--spacing-sm); }
+  .px-md            { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
+  .py-md            { padding-top: var(--spacing-md); padding-bottom: var(--spacing-md); }
+}
+
+@layer utilities {
+  /* Typography sizes */
+  .text-xs     { font-size: 0.75rem; line-height: 1rem; }
+  .text-sm     { font-size: 0.875rem; line-height: 1.25rem; }
+  .text-base   { font-size: 1rem; line-height: 1.5rem; }
+  .text-lg     { font-size: 1.125rem; line-height: 1.75rem; }
+  .text-xl     { font-size: 1.25rem; line-height: 1.75rem; }
+  .text-2xl    { font-size: 1.5rem; line-height: 2rem; }
+  .text-3xl    { font-size: 1.875rem; line-height: 2.25rem; }
+  .text-4xl    { font-size: 2.25rem; line-height: 2.5rem; }
+  .text-5xl    { font-size: 3rem; line-height: 1; }
+  .text-6xl    { font-size: 3.75rem; line-height: 1; }
+
+  /* Border */
+  .border              { border-width: 1px; }
+  .border-2            { border-width: 2px; }
+  .border-primary      { border-color: var(--color-primary); }
+  .border-secondary    { border-color: var(--color-secondary); }
+  .border-accent       { border-color: var(--color-accent); }
+
+  /* Shadows */
+  .shadow              { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+  .shadow-md           { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+  .shadow-lg           { box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+
+  /* Width / layout helpers */
+  .w-full              { width: 100%; }
+  .max-w-screen-md     { max-width: 768px; }
+  .max-w-screen-lg     { max-width: 1024px; }
+  .mx-auto             { margin-left: auto; margin-right: auto; }
+  .text-center         { text-align: center; }
+
+  /* Transitions */
+  .transition           { transition-property: all; transition-duration: 150ms; transition-timing-function: ease-in-out; }
+  .transition-colors    { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-duration: 150ms; }
+  .duration-200         { transition-duration: 200ms; }
+  .duration-300         { transition-duration: 300ms; }
+
+  /* Transform / scale / animation */
+  .transform             { transform: translateZ(0); }
+  .hover\:scale-105:hover { transform: scale(1.05); }
+  .hover\:scale-110:hover { transform: scale(1.10); }
+
+  /* Button extras */
+  .font-bold            { font-weight: 700; }
+  .uppercase            { text-transform: uppercase; }
+  .tracking-wide        { letter-spacing: 0.05em; }
+}
+
 
 /* 3. Your own custom CSS */
 body {
